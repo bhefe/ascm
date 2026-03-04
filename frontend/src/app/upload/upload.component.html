@@ -1,0 +1,31 @@
+<div class="page">
+  <div class="card">
+    <div class="logo">Compliance Check</div>
+    <div class="subtitle">Upload your scan file to check software compliance</div>
+
+    <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+    <div class="drop-zone"
+         (dragover)="onDragOver($event)"
+         (drop)="onDrop($event)"
+         [class.has-file]="selectedFile">
+      <input type="file" accept=".csv" (change)="onFileSelected($event)" />
+      <div class="drop-icon">📄</div>
+      <div class="drop-text">{{ selectedFile ? selectedFile.name : 'Drop your CSV file here' }}</div>
+      <div class="drop-hint" *ngIf="!selectedFile">or click to browse</div>
+    </div>
+
+    <button class="btn" [disabled]="!selectedFile || loading" (click)="submit()">
+      {{ loading ? 'Checking…' : 'Check Compliance' }}
+    </button>
+
+    <div class="instructions">
+      <h3>How to use</h3>
+      <ol>
+        <li>Run <code>scan_software.exe</code> on your computer</li>
+        <li>Upload the generated <code>installed_software_*.csv</code> file above</li>
+        <li>View your compliance report instantly</li>
+      </ol>
+    </div>
+  </div>
+</div>
