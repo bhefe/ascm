@@ -31,7 +31,7 @@ PyInstaller.__main__.run([
 ])
 
 print("\nBuild complete: dist/Scan Software.exe")
-print("  Copy 'dist/Scan Software.exe' next to 'Scan Software.bat' for distribution.")
+print("  Copy 'dist/Scan Software.exe' for distribution to end users.")
 print()
 print("  NOTE: Users may see a Windows SmartScreen warning.")
 print("  They should click 'More info' → 'Run anyway' to proceed.")
