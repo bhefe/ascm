@@ -61,14 +61,125 @@ app.add_middleware(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 APPROVED_PDFS = [
-    os.path.join(BASE_DIR, "LIST OF SOFTWARES - (APPROVED BY SAM).pdf"),
-    os.path.join(BASE_DIR, "LIST OF SOFTWARES(APPROVED BY SAM).pdf"),
+    os.path.join(BASE_DIR, "list of softwares (APPROVED by SAM).pdf")
 ]
 NOT_APPROVED_PDFS = [
-    os.path.join(BASE_DIR, "LIST OF SOFTWARES (NOT APPROVED BY SAM).pdf"),
-    os.path.join(BASE_DIR, "LIST OF SOFTWARES (NOT APPROVED BY SAM) 26 SEPT 2025.pdf"),
+    os.path.join(BASE_DIR, "LIST OF  SOFTWARES (NOT APPROVED).pdf")
 ]
 
+# ── Pre-installed software to ignore (won't appear in report) ──────
+IGNORE_LIST = [
+    "241916F58D6E7",
+    "7.1 Surround Sound",
+    "Actions Server",
+    "Adobe Acrobat DCCore App",
+    "aimgr",
+    "Antigravity (User)",
+    "ASUS Aac",
+    "ASUS Ambient",
+    "ASUS AURA",
+    "ASUS Device Check",
+    "ASUS Framework",
+    "ASUS Hotplug",
+    "ASUS Keyboard",
+    "ASUS MB",
+    "ASUS Mouse",
+    "ASUS Smart",
+    "ASUS Update",
+    "ASUSAmbient",
+    "ASUSPCAssistant",
+    "AURA",
+    "AVCEncoder Video Extension",
+    "Clipchamp",
+    "Composer - PHP",
+    "Copilot",
+    "Configuration Manager",
+    "Cross Device",
+    "Dev-C++",
+    "DiagnosticsHub",
+    "Dolby Vision",
+    "DTSXUltra",
+    "EA app",
+    "EA SPORTS",
+    "ELANTrack",
+    "Epic Games",
+    "EUC Wallpaper",
+    "Game Assist",
+    "Gaming App",
+    "Gaming Services",
+    "GameSDK",
+    "Glanceby",
+    "Glidex",
+    "GlideX",
+    "HPPrinter",
+    "Intel Arc",
+    "Intel Graphics",
+    "Ivanti Secure",
+    "Kinect for Windows",
+    "Language Experience",
+    "Launcher Prerequisites",
+    "Lenovo Companion",
+    "Lenovo Migration",
+    "Lenovo Quick",
+    "Lenovo Settings",
+    "Lenovo Vantage",
+    "M365Companions",
+    "Microsoft .NET",
+    "Microsoft 365 Apps",
+    "Microsoft ASP.NET",
+    "Microsoft Azure",
+    "Microsoft Edge",
+    "Microsoft Family",
+    "Microsoft GameInput",
+    "Microsoft ODBC",
+    "Microsoft OneNote",
+    "Microsoft Office Hub",
+    "Microsoft OneDrive",
+    "Microsoft Policy",
+    "Microsoft Server Speech",
+    "Microsoft Teams",
+    "Microsoft Visual Studio",
+    "MSTeams",
+    "Mozilla Maintenance",
+    "NVIDIA",
+    "Office 16 Click-to-Run",
+    "Office Push Notification",
+    "One Connect",
+    "One Note Virtual",
+    "OTA Dependencies",
+    "Outlook For Windows",
+    "Overcooked",
+    "Parsec",
+    "PersonalGatewayComponents",
+    "POV-Ray",
+    "Portal",
+    "Print3D",
+    "PuTTY",
+    "Pulse Application",
+    "Pulse Secure",
+    "Quick Assist",
+    "Realtek Audio",
+    "RefreshRateService",
+    "Rockstar Games",
+    "ROG Live Service",
+    "Screen Pad Master",
+    "Sec Health UI",
+    "Shell Extension",
+    "SmartPSS",
+    "Start Experiences",
+    "Synaptics Control",
+    "Synaptics Utilities",
+    "Tesseract-OCR",
+    "Thunderbolt Control",
+    "VcXsrv",
+    "Web Experience",
+    "Whiteboard",
+    "Widgets Platform",
+    "Windows Subsystem For Linux",
+    "X-Rite Color",
+]
+
+# ── Compliance logic ──────────────────────────────────────
 # ── Compliance logic ──────────────────────────────────────
 
 def extract_pdf_table(pdf_path):
@@ -141,6 +252,7 @@ def run_check(file_bytes):
     counts = {"Allowed": 0, "Not Allowed": 0, "Not Found": 0}
     ai_count = 0
     exact_count = 0
+    ignore_count = 0
 
     # Pre-compute cleaned official names once (avoids re-cleaning on every comparison)
     official_clean = official["Software"].apply(clean_name).tolist()
@@ -152,6 +264,12 @@ def run_check(file_bytes):
     # Pass 1: exact/substring match for every row
     for _, row in user_df.iterrows():
         sw_name = row["Software"]
+        
+        # Skip if in ignore list
+        if any(ignored.lower() in sw_name.lower() for ignored in IGNORE_LIST):
+            ignore_count += 1
+            continue
+        
         sw_clean = clean_name(sw_name)
         matched = ""
         status = "Not Found"
@@ -159,6 +277,9 @@ def run_check(file_bytes):
         confidence = 0
 
         for idx, off_clean in enumerate(official_clean):
+            # Skip entries with empty cleaned names (e.g., version numbers)
+            if not off_clean or not sw_clean:
+                continue
             if sw_clean in off_clean or off_clean in sw_clean:
                 matched = official_names[idx]
                 status = official_status[idx]
@@ -196,8 +317,8 @@ def run_check(file_bytes):
     for r in results:
         counts[r["status"]] = counts.get(r["status"], 0) + 1
 
-    print(f"[CHECK] Done — Exact: {exact_count}, AI Semantic: {ai_count}, Not Found: {counts.get('Not Found', 0)}", flush=True)
-    print(f"[CHECK] Summary — Allowed: {counts['Allowed']}, Not Allowed: {counts['Not Allowed']}, Not Found: {counts['Not Found']}", flush=True)
+    print(f"[CHECK] Done — Exact: {exact_count}, AI Semantic: {ai_count}, Not Found: {counts.get('Not Found', 0)}, Ignored: {ignore_count}", flush=True)
+    print(f"[CHECK] Summary — Allowed: {counts['Allowed']}, Not Allowed: {counts['Not Allowed']}, Not Found: {counts['Not Found']}, Ignored: {ignore_count}", flush=True)
 
     # ── LLM risk assessment disabled (too slow) ──
     # not_found = [r for r in results if r["status"] == "Not Found"]
