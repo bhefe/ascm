@@ -23,6 +23,8 @@ wheels/
 venv/
 ENV/
 env/
+.build_venv/
+.python32/
 
 # PyInstaller
 *.manifest
