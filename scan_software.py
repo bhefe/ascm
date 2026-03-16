@@ -183,6 +183,26 @@ IGNORE_LIST = [
     "Update for",
     "Google Chrome",
     "Adobe Acrobat Reader Core App",
+    "Free Snipping Tool",
+    "Java Auto Updater",
+    "Mozilla Firefox",
+    "PL-2303 USB-to-Serial",
+    "Printer Registration",
+    "Synology Assistant",
+    "TightVNC",
+    "VMware vSphere Client",
+    "Dell Support Assist",
+    "Intel Optane",
+    "Intel Wireless Bluetooth",
+    "Maxx Audio",
+    "Intel Trusted Connect",
+    "Canon MF Scan",
+    "LinkedIn",
+    "Dell Digital Delivery",
+    "Adobe Refresh Manager",
+    "SAP",
+    "AMD Radeon",
+    "Lexmark",
 ]
 
 
@@ -798,7 +818,7 @@ def main():
         scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         print("\n" + "="*80)
-        print(f"  SOFTWARE COMPLIANCE SCAN V1.1")
+        print(f"  SOFTWARE COMPLIANCE SCAN V1.3")
         print("="*80)
         print(f"  Hostname: {hostname}")
         print(f"  Username: {username}")
