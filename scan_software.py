@@ -943,20 +943,16 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         
         ws[f"A{row}"] = "Software name"
         ws[f"B{row}"] = "Matched With"
-        ws[f"C{row}"] = "Remark"
-        for cell in [ws[f"A{row}"], ws[f"B{row}"], ws[f"C{row}"]]:
+        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
             cell.alignment = center_align
         row += 1
         
         for r in allowed:
-            remark = r.get("remark", "")
-            
             ws[f"A{row}"] = r["software"]
             ws[f"B{row}"] = r["matched"]
-            ws[f"C{row}"] = remark
-            for cell in [ws[f"A{row}"], ws[f"B{row}"], ws[f"C{row}"]]:
+            for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
                 cell.border = border
                 cell.alignment = left_align
             row += 1
