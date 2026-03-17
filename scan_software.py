@@ -942,7 +942,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         row += 1
         
         ws[f"A{row}"] = "Software name"
-        ws[f"B{row}"] = "Matched With"
+        ws[f"B{row}"] = "Matched With SAM List"
         for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
@@ -1002,35 +1002,30 @@ def display_results(results, counts, hostname):
     # Print summary
     print(f"  ")
     print(f"  +-- COMPLIANCE SUMMARY -----------------------+")
-    print(f"  | [OK]  Allowed:      {counts['Allowed']:>4} programs            |")
-    print(f"  | [!!]  Not Allowed:  {counts['Not Allowed']:>4} programs            |")
-    print(f"  | [??]  Not Found:    {counts.get('Not Found', 0):>4} programs            |")
+    print(f"  | Allowed:      {counts['Allowed']:>4} programs            |")
+    print(f"  | Not Allowed:  {counts['Not Allowed']:>4} programs            |")
+    print(f"  | Not Found:    {counts.get('Not Found', 0):>4} programs            |")
     print(f"  +---------------------------------------------+\n")
 
     # Print detailed results if there are issues
     if not_allowed:
-        print(f"  === NOT ALLOWED ({len(not_allowed)}) ========================================")
+        print(f"\033[1;31m  = NOT ALLOWED ({len(not_allowed)}) Please uninstall immediately through IRIS helpdesk or contact IT unit=\033[0m")
         for r in not_allowed:
-            print(f"  | {r['software'][:60]}")
-            print(f"  |   Matched: {r['matched'][:55]}")
-        print(f"  |")
-        print(f"  | NOTE: Please uninstall immediately or contact IT unit.")
-        print(f"  ================================================================\n")
+            print(f"\033[31m  | {r['software'][:60]}\033[0m")
+            print(f"\033[31m  |   Matched: {r['matched'][:55]}\033[0m")
+        print(f"\033[31m  |\033[0m")
 
     if allowed:
-        print(f"  === ALLOWED ({len(allowed)}) ===========================================")
+        print(f"  = ALLOWED ({len(allowed)}) Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my=")
         for r in allowed:
             print(f"  | {r['software'][:60]}")
-            print(f"  |   Matched: {r['matched'][:55]}")
-        print(f"  ================================================================\n")
 
     if not_found:
-        print(f"  === UNKNOWN ({len(not_found)}) ============================================")
+        print(f"  = UNKNOWN ({len(not_found)}) =")
         for r in not_found[:20]:  # Show first 20
             print(f"  | {r['software'][:60]}")
         if len(not_found) > 20:
             print(f"  | ... and {len(not_found) - 20} more ...")
-        print(f"  ================================================================\n")
 
     if allowed and not not_allowed and not not_found:
         print(f"  [OK] All programs are compliant!\n")
