@@ -681,21 +681,7 @@ APPROVED_LIST = [
     "audacity",
     "miktex",
     "texstudio",
-    "laslook",
-    "mobaxterm",
-    "termius",
-    "docker desktop",
-    "irfanview",
-    "anaconda",
-    "teracopy",
-    "sublime",
-    "windsurf",
-    "warp",
-    "burp suite professional",
-    "xshell",
-    "sdk arm additions",
-    "sdk arm redistributables",
-    "vs script debugging common",
+    "laslook"
 ]
 
 def build_official_list():
@@ -800,20 +786,19 @@ def main():
         username = getpass.getuser()
         scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        print("\n" + "="*80)
+        print("\n" + "-"*40)
         print(f"  SOFTWARE COMPLIANCE SCAN V1.4")
-        print("="*80)
         print(f"  Hostname: {hostname}")
         print(f"  Username: {username}")
         print(f"  Time: {scan_time}")
-        print("="*80 + "\n")
+        print("-"*40 + "\n")
 
         # Step 1: SCAN
-        print("  [STEP 1] Scanning installed software...\n")
+        print("  1. Scanning installed software...\n")
         registry_apps = get_installed_software()
         store_apps = get_store_apps()
         software = deduplicate_and_sort(registry_apps + store_apps)
-        print(f"  [OK] Found installed programs.\n")
+        print(f"  Found installed programs.\n")
 
         # Step 2: Create CSV in memory for compliance check
         csv_output = io.StringIO()
@@ -826,7 +811,7 @@ def main():
         csv_bytes = csv_output.getvalue().encode("utf-8")
 
         # Step 3: COMPARE with official list
-        print("  [STEP 2] Comparing against compliance lists...\n")
+        print("  2. Comparing against compliance lists...\n")
         results, counts = run_check_local(csv_bytes)
 
         # Step 4: SAVE EXCEL REPORT to Downloads
@@ -839,17 +824,17 @@ def main():
 
         # Generate Excel report
         generate_excel_report(output_path, results, counts, hostname, username, scan_time)
-        print(f"  [OK] Excel report saved to: {output_path}\n")
         
         # Step 5: DISPLAY RESULTS
         display_results(results, counts, hostname)
         
-        print("\n" + "="*80)
-        print("  SCAN COMPLETE")
-        print("="*80)
-        print(f"  Report saved to: {output_path}")
-        print("="*80 + "\n")
+
+
+        print(f"  ")
+        print(f"  Completed. Report saved to: {output_path}")
         
+
+         
         return output_path
 
     except Exception as e:
@@ -868,8 +853,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     # Define styles
     header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF")
-    not_allowed_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-    not_allowed_font = Font(color="FFFFFF", bold=True)
+    not_allowed_font = Font(color="FF0000", bold=True)
     not_found_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
     allowed_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
     border = Border(
@@ -908,7 +892,6 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     not_allowed = [r for r in results if r["status"] == "Not Allowed"]
     if not_allowed:
         ws[f"A{row}"] = f"NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately through IRIS helpdesk or contact IT unit"
-        ws[f"A{row}"].fill = not_allowed_fill
         ws[f"A{row}"].font = not_allowed_font
         ws.merge_cells(f"A{row}:C{row}")
         row += 1
@@ -925,7 +908,6 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
             ws[f"A{row}"] = r["software"]
             ws[f"B{row}"] = r["matched"]
             for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
-                cell.fill = not_allowed_fill
                 cell.font = not_allowed_font
                 cell.border = border
                 cell.alignment = left_align
@@ -1009,14 +991,21 @@ def display_results(results, counts, hostname):
 
     # Print detailed results if there are issues
     if not_allowed:
-        print(f"\033[1;31m  = NOT ALLOWED ({len(not_allowed)}) Please uninstall immediately through IRIS helpdesk or contact IT unit=\033[0m")
+        print(f"  ")
+        print(f"\033[1;31m  -------------------------------------------------------------------------------------\033[0m")
+        print(f"\033[1;31m  NOT ALLOWED ({len(not_allowed)}) Please uninstall immediately through IRIS helpdesk or contact IT unit\033[0m")
+        print(f"\033[1;31m  -------------------------------------------------------------------------------------\033[0m")
+
         for r in not_allowed:
             print(f"\033[31m  | {r['software'][:60]}\033[0m")
-            print(f"\033[31m  |   Matched: {r['matched'][:55]}\033[0m")
         print(f"\033[31m  |\033[0m")
 
     if allowed:
-        print(f"  = ALLOWED ({len(allowed)}) Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my=")
+        print(f"  ")
+        print(f"  ----------------------------------------------------------------------------------------------")
+        print(f"  ALLOWED ({len(allowed)}) Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my")
+        print(f"  ----------------------------------------------------------------------------------------------")
+
         for r in allowed:
             print(f"  | {r['software'][:60]}")
 
