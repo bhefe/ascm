@@ -805,6 +805,307 @@ def run_check_local(csv_bytes):
     return results, counts
 
 
+def generate_html_report(results, counts, hostname, username, scan_time, output_path):
+    """Generate an HTML report with colors and formatting."""
+    
+    # Group results by status
+    allowed = [r for r in results if r["status"] == "Allowed"]
+    not_allowed = [r for r in results if r["status"] == "Not Allowed"]
+    unknown = [r for r in results if r["status"] == "Not Found"]
+    
+    # Create HTML file path (replace .csv with .html)
+    html_path = output_path.replace(".csv", ".html")
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Compliance Report</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }}
+        .header {{
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }}
+        .header h1 {{
+            margin: 0 0 15px 0;
+            font-size: 24px;
+        }}
+        .header-info {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 14px;
+        }}
+        .header-info p {{
+            margin: 5px 0;
+        }}
+        .section {{
+            background-color: white;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        .section-title {{
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }}
+        .not-allowed-section .section-title {{
+            background-color: #d32f2f;
+            color: white;
+        }}
+        .allowed-section .section-title {{
+            background-color: #388e3c;
+            color: white;
+        }}
+        .unknown-section .section-title {{
+            background-color: #f57c00;
+            color: white;
+        }}
+        .warning-box {{
+            background-color: #ffebee;
+            border-left: 4px solid #d32f2f;
+            padding: 15px 20px;
+            margin: 15px 20px 0 20px;
+        }}
+        .warning-box p {{
+            margin: 0;
+            color: #d32f2f;
+            font-weight: bold;
+        }}
+        .section-content {{
+            padding: 0;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+        }}
+        th {{
+            background-color: #f5f5f5;
+            padding: 12px 20px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+            font-size: 14px;
+        }}
+        td {{
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }}
+        tr:hover {{
+            background-color: #fafafa;
+        }}
+        .not-allowed-row {{
+            color: #d32f2f;
+            font-weight: 500;
+        }}
+        .note {{
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 15px 20px;
+            border-radius: 3px;
+            font-size: 13px;
+        }}
+        .note p {{
+            margin: 0;
+            color: #856404;
+        }}
+        .summary {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        .summary-card {{
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }}
+        .summary-card .number {{
+            font-size: 28px;
+            font-weight: bold;
+            margin: 10px 0;
+        }}
+        .summary-card.red .number {{
+            color: #d32f2f;
+        }}
+        .summary-card.green .number {{
+            color: #388e3c;
+        }}
+        .summary-card.orange .number {{
+            color: #f57c00;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Software Compliance Report</h1>
+        <div class="header-info">
+            <p><strong>Hostname:</strong> {hostname}</p>
+            <p><strong>Username:</strong> {username}</p>
+            <p><strong>Scan Time:</strong> {scan_time}</p>
+            <p><strong>Total Checked:</strong> {sum(counts.values())}</p>
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card red">
+            <div>Not Allowed</div>
+            <div class="number">{len(not_allowed)}</div>
+        </div>
+        <div class="summary-card green">
+            <div>Allowed</div>
+            <div class="number">{len(allowed)}</div>
+        </div>
+        <div class="summary-card orange">
+            <div>Unknown</div>
+            <div class="number">{len(unknown)}</div>
+        </div>
+    </div>
+"""
+
+    # NOT ALLOWED Section
+    if not_allowed:
+        html_content += f"""
+    <div class="section not-allowed-section">
+        <div class="section-title">NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately through IRIS helpdesk or contact IT unit</div>
+        <div class="warning-box">
+            <p>⚠ ACTION REQUIRED: Uninstall these applications immediately or request SAM clearance</p>
+        </div>
+        <div class="section-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Software Name</th>
+                        <th>Matched With</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+        for r in not_allowed:
+            html_content += f"""                    <tr class="not-allowed-row">
+                        <td>{r['software']}</td>
+                        <td>{r['matched']}</td>
+                    </tr>
+"""
+        html_content += """                </tbody>
+            </table>
+        </div>
+    </div>
+"""
+    else:
+        html_content += """
+    <div class="section not-allowed-section" style="opacity: 0.6;">
+        <div class="section-title">NOT ALLOWED (0)</div>
+        <div class="section-content" style="padding: 20px; text-align: center; color: #999;">
+            No non-compliant software found. ✓
+        </div>
+    </div>
+"""
+
+    # ALLOWED Section
+    html_content += f"""
+    <div class="section allowed-section">
+        <div class="section-title">ALLOWED ({len(allowed)})</div>
+        <div class="section-content">
+"""
+    
+    if allowed:
+        html_content += """            <table>
+                <thead>
+                    <tr>
+                        <th>Software Name</th>
+                        <th>Matched With</th>
+                        <th>Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+        for r in allowed:
+            remark = r.get('remark', '')
+            if r.get('remark'):
+                remark = '(paid software)'
+            html_content += f"""                    <tr>
+                        <td>{r['software']}</td>
+                        <td>{r['matched']}</td>
+                        <td>{remark}</td>
+                    </tr>
+"""
+        html_content += """                </tbody>
+            </table>
+"""
+    else:
+        html_content += """            <p style="padding: 20px; text-align: center; color: #999;">
+                No allowed software found.
+            </p>
+"""
+    
+    html_content += """        </div>
+    </div>
+"""
+
+    # UNKNOWN Section
+    html_content += f"""
+    <div class="section unknown-section">
+        <div class="section-title">UNKNOWN ({len(unknown)})</div>
+        <div class="note">
+            <p><strong>Note:</strong> Software listed below requires SAM clearance memo. Please email to: sam@tm.com.my</p>
+        </div>
+        <div class="section-content">
+"""
+    
+    if unknown:
+        html_content += """            <table>
+                <thead>
+                    <tr>
+                        <th>Software Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+        for r in unknown:
+            html_content += f"""                    <tr>
+                        <td>{r['software']}</td>
+                    </tr>
+"""
+        html_content += """                </tbody>
+            </table>
+"""
+    else:
+        html_content += """            <p style="padding: 20px; text-align: center; color: #999;">
+                No unknown software found.
+            </p>
+"""
+    
+    html_content += """        </div>
+    </div>
+
+</body>
+</html>
+"""
+
+    # Write HTML file
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    
+    return html_path
+
+
 def main():
     # Force UTF-8 output to handle special characters in all terminals
     if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
@@ -887,13 +1188,19 @@ def main():
 
         print(f"  [OK] Saved to: {output_path}\n")
         
-        # Step 4: DISPLAY RESULTS
+        # Step 5: GENERATE HTML REPORT
+        print("  [STEP 3] Generating HTML report...\n")
+        html_path = generate_html_report(results, counts, hostname, username, scan_time, output_path)
+        print(f"  [OK] HTML report saved to: {html_path}\n")
+        
+        # Step 6: DISPLAY RESULTS
         display_results(results, counts, hostname)
         
         print("\n" + "="*80)
         print("  SCAN COMPLETE")
         print("="*80)
         print(f"  CSV saved to: {output_path}")
+        print(f"  HTML saved to: {html_path}")
         print("="*80 + "\n")
         
         return output_path
