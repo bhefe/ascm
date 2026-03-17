@@ -12,8 +12,8 @@ VENV_DIR = os.path.join(SCRIPT_DIR, ".build_venv")
 DIST_DIR = os.path.join(SCRIPT_DIR, "dist")
 BUILD_DIR = os.path.join(SCRIPT_DIR, "build")
 
-# Only pdfplumber is needed (pulls in pdfminer.six automatically)
-REQUIRED_PACKAGES = ["pdfplumber", "pyinstaller"]
+# Only pdfplumber + openpyxl needed (pdfplumber pulls in pdfminer.six automatically)
+REQUIRED_PACKAGES = ["pdfplumber", "openpyxl", "pyinstaller"]
 
 
 def run_cmd(args, description=""):
@@ -80,7 +80,9 @@ def main():
         f"--specpath={SCRIPT_DIR}",
         "--hidden-import=pdfplumber",
         "--hidden-import=charset_normalizer",
+        "--hidden-import=openpyxl",
         "--collect-all=charset_normalizer",
+        "--collect-all=openpyxl",
         "--clean",
     ]
 

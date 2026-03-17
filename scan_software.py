@@ -11,6 +11,9 @@ import io
 from datetime import datetime
 
 import pdfplumber
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 
 # When running as frozen exe, PDFs are bundled in _MEIPASS temp dir
@@ -805,307 +808,6 @@ def run_check_local(csv_bytes):
     return results, counts
 
 
-def generate_html_report(results, counts, hostname, username, scan_time, output_path):
-    """Generate an HTML report with colors and formatting."""
-    
-    # Group results by status
-    allowed = [r for r in results if r["status"] == "Allowed"]
-    not_allowed = [r for r in results if r["status"] == "Not Allowed"]
-    unknown = [r for r in results if r["status"] == "Not Found"]
-    
-    # Create HTML file path (replace .csv with .html)
-    html_path = output_path.replace(".csv", ".html")
-    
-    html_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Software Compliance Report</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }}
-        .header {{
-            background-color: #333;
-            color: white;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }}
-        .header h1 {{
-            margin: 0 0 15px 0;
-            font-size: 24px;
-        }}
-        .header-info {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 14px;
-        }}
-        .header-info p {{
-            margin: 5px 0;
-        }}
-        .section {{
-            background-color: white;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }}
-        .section-title {{
-            padding: 15px 20px;
-            font-weight: bold;
-            font-size: 16px;
-        }}
-        .not-allowed-section .section-title {{
-            background-color: #d32f2f;
-            color: white;
-        }}
-        .allowed-section .section-title {{
-            background-color: #388e3c;
-            color: white;
-        }}
-        .unknown-section .section-title {{
-            background-color: #f57c00;
-            color: white;
-        }}
-        .warning-box {{
-            background-color: #ffebee;
-            border-left: 4px solid #d32f2f;
-            padding: 15px 20px;
-            margin: 15px 20px 0 20px;
-        }}
-        .warning-box p {{
-            margin: 0;
-            color: #d32f2f;
-            font-weight: bold;
-        }}
-        .section-content {{
-            padding: 0;
-        }}
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-        }}
-        th {{
-            background-color: #f5f5f5;
-            padding: 12px 20px;
-            text-align: left;
-            font-weight: bold;
-            border-bottom: 2px solid #ddd;
-            font-size: 14px;
-        }}
-        td {{
-            padding: 12px 20px;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-        }}
-        tr:hover {{
-            background-color: #fafafa;
-        }}
-        .not-allowed-row {{
-            color: #d32f2f;
-            font-weight: 500;
-        }}
-        .note {{
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px 20px;
-            margin: 15px 20px;
-            border-radius: 3px;
-            font-size: 13px;
-        }}
-        .note p {{
-            margin: 0;
-            color: #856404;
-        }}
-        .summary {{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }}
-        .summary-card {{
-            background-color: white;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }}
-        .summary-card .number {{
-            font-size: 28px;
-            font-weight: bold;
-            margin: 10px 0;
-        }}
-        .summary-card.red .number {{
-            color: #d32f2f;
-        }}
-        .summary-card.green .number {{
-            color: #388e3c;
-        }}
-        .summary-card.orange .number {{
-            color: #f57c00;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Software Compliance Report</h1>
-        <div class="header-info">
-            <p><strong>Hostname:</strong> {hostname}</p>
-            <p><strong>Username:</strong> {username}</p>
-            <p><strong>Scan Time:</strong> {scan_time}</p>
-            <p><strong>Total Checked:</strong> {sum(counts.values())}</p>
-        </div>
-    </div>
-
-    <div class="summary">
-        <div class="summary-card red">
-            <div>Not Allowed</div>
-            <div class="number">{len(not_allowed)}</div>
-        </div>
-        <div class="summary-card green">
-            <div>Allowed</div>
-            <div class="number">{len(allowed)}</div>
-        </div>
-        <div class="summary-card orange">
-            <div>Unknown</div>
-            <div class="number">{len(unknown)}</div>
-        </div>
-    </div>
-"""
-
-    # NOT ALLOWED Section
-    if not_allowed:
-        html_content += f"""
-    <div class="section not-allowed-section">
-        <div class="section-title">NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately through IRIS helpdesk or contact IT unit</div>
-        <div class="warning-box">
-            <p>⚠ ACTION REQUIRED: Uninstall these applications immediately or request SAM clearance</p>
-        </div>
-        <div class="section-content">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Software Name</th>
-                        <th>Matched With</th>
-                    </tr>
-                </thead>
-                <tbody>
-"""
-        for r in not_allowed:
-            html_content += f"""                    <tr class="not-allowed-row">
-                        <td>{r['software']}</td>
-                        <td>{r['matched']}</td>
-                    </tr>
-"""
-        html_content += """                </tbody>
-            </table>
-        </div>
-    </div>
-"""
-    else:
-        html_content += """
-    <div class="section not-allowed-section" style="opacity: 0.6;">
-        <div class="section-title">NOT ALLOWED (0)</div>
-        <div class="section-content" style="padding: 20px; text-align: center; color: #999;">
-            No non-compliant software found. ✓
-        </div>
-    </div>
-"""
-
-    # ALLOWED Section
-    html_content += f"""
-    <div class="section allowed-section">
-        <div class="section-title">ALLOWED ({len(allowed)})</div>
-        <div class="section-content">
-"""
-    
-    if allowed:
-        html_content += """            <table>
-                <thead>
-                    <tr>
-                        <th>Software Name</th>
-                        <th>Matched With</th>
-                        <th>Remark</th>
-                    </tr>
-                </thead>
-                <tbody>
-"""
-        for r in allowed:
-            remark = r.get('remark', '')
-            if r.get('remark'):
-                remark = '(paid software)'
-            html_content += f"""                    <tr>
-                        <td>{r['software']}</td>
-                        <td>{r['matched']}</td>
-                        <td>{remark}</td>
-                    </tr>
-"""
-        html_content += """                </tbody>
-            </table>
-"""
-    else:
-        html_content += """            <p style="padding: 20px; text-align: center; color: #999;">
-                No allowed software found.
-            </p>
-"""
-    
-    html_content += """        </div>
-    </div>
-"""
-
-    # UNKNOWN Section
-    html_content += f"""
-    <div class="section unknown-section">
-        <div class="section-title">UNKNOWN ({len(unknown)})</div>
-        <div class="note">
-            <p><strong>Note:</strong> Software listed below requires SAM clearance memo. Please email to: sam@tm.com.my</p>
-        </div>
-        <div class="section-content">
-"""
-    
-    if unknown:
-        html_content += """            <table>
-                <thead>
-                    <tr>
-                        <th>Software Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-"""
-        for r in unknown:
-            html_content += f"""                    <tr>
-                        <td>{r['software']}</td>
-                    </tr>
-"""
-        html_content += """                </tbody>
-            </table>
-"""
-    else:
-        html_content += """            <p style="padding: 20px; text-align: center; color: #999;">
-                No unknown software found.
-            </p>
-"""
-    
-    html_content += """        </div>
-    </div>
-
-</body>
-</html>
-"""
-
-    # Write HTML file
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    return html_path
-
-
 def main():
     # Force UTF-8 output to handle special characters in all terminals
     if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
@@ -1188,10 +890,9 @@ def main():
 
         print(f"  [OK] Saved to: {output_path}\n")
         
-        # Step 5: GENERATE HTML REPORT
-        print("  [STEP 3] Generating HTML report...\n")
-        html_path = generate_html_report(results, counts, hostname, username, scan_time, output_path)
-        print(f"  [OK] HTML report saved to: {html_path}\n")
+        # Step 5: GENERATE EXCEL REPORT
+        excel_path = generate_excel_report(output_path, results, counts, hostname, username, scan_time)
+        print(f"  [OK] Excel report saved to: {excel_path}\n")
         
         # Step 6: DISPLAY RESULTS
         display_results(results, counts, hostname)
@@ -1200,7 +901,7 @@ def main():
         print("  SCAN COMPLETE")
         print("="*80)
         print(f"  CSV saved to: {output_path}")
-        print(f"  HTML saved to: {html_path}")
+        print(f"  Excel saved to: {excel_path}")
         print("="*80 + "\n")
         
         return output_path
@@ -1210,6 +911,151 @@ def main():
         import traceback
         traceback.print_exc()
         return None
+
+
+def generate_excel_report(output_path, results, counts, hostname, username, scan_time):
+    """Generate an Excel report with color coding and formatting."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Compliance Report"
+    
+    # Define styles
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    not_allowed_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    not_allowed_font = Font(color="FFFFFF", bold=True)
+    not_found_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    allowed_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin")
+    )
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
+    row = 1
+    
+    # Header Section
+    ws[f"A{row}"] = "Software Compliance Report"
+    ws[f"A{row}"].font = Font(bold=True, size=14)
+    row += 2
+    
+    ws[f"A{row}"] = "Hostname:"
+    ws[f"B{row}"] = hostname
+    row += 1
+    
+    ws[f"A{row}"] = "Username:"
+    ws[f"B{row}"] = username
+    row += 1
+    
+    ws[f"A{row}"] = "Scan Time:"
+    ws[f"B{row}"] = scan_time
+    row += 1
+    
+    ws[f"A{row}"] = "Total Checked:"
+    ws[f"B{row}"] = sum(counts.values())
+    row += 2
+    
+    # NOT ALLOWED Section
+    not_allowed = [r for r in results if r["status"] == "Not Allowed"]
+    if not_allowed:
+        ws[f"A{row}"] = f"NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately through IRIS helpdesk or contact IT unit"
+        ws[f"A{row}"].fill = not_allowed_fill
+        ws[f"A{row}"].font = not_allowed_font
+        ws.merge_cells(f"A{row}:C{row}")
+        row += 1
+        
+        ws[f"A{row}"] = "Software name"
+        ws[f"B{row}"] = "Matched With"
+        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.border = border
+            cell.alignment = center_align
+        row += 1
+        
+        for r in not_allowed:
+            ws[f"A{row}"] = r["software"]
+            ws[f"B{row}"] = r["matched"]
+            for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
+                cell.fill = not_allowed_fill
+                cell.font = not_allowed_font
+                cell.border = border
+                cell.alignment = left_align
+            row += 1
+        
+        row += 1
+    
+    # ALLOWED Section
+    allowed = [r for r in results if r["status"] == "Allowed"]
+    if allowed:
+        ws[f"A{row}"] = f"ALLOWED ({len(allowed)})"
+        ws[f"A{row}"].fill = allowed_fill
+        ws[f"A{row}"].font = Font(bold=True)
+        ws.merge_cells(f"A{row}:C{row}")
+        row += 1
+        
+        ws[f"A{row}"] = "Software name"
+        ws[f"B{row}"] = "Matched With"
+        ws[f"C{row}"] = "Remark"
+        for cell in [ws[f"A{row}"], ws[f"B{row}"], ws[f"C{row}"]]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.border = border
+            cell.alignment = center_align
+        row += 1
+        
+        for r in allowed:
+            remark = r.get("remark", "")
+            if remark:
+                remark_display = f"{remark} (paid software)" if "paid" not in remark.lower() else remark
+            else:
+                remark_display = ""
+            
+            ws[f"A{row}"] = r["software"]
+            ws[f"B{row}"] = r["matched"]
+            ws[f"C{row}"] = remark_display
+            for cell in [ws[f"A{row}"], ws[f"B{row}"], ws[f"C{row}"]]:
+                cell.border = border
+                cell.alignment = left_align
+            row += 1
+        
+        row += 1
+    
+    # UNKNOWN Section
+    not_found = [r for r in results if r["status"] == "Not Found"]
+    if not_found:
+        ws[f"A{row}"] = f"UNKNOWN ({len(not_found)}) - Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my"
+        ws[f"A{row}"].fill = not_found_fill
+        ws[f"A{row}"].font = Font(bold=True)
+        ws.merge_cells(f"A{row}:C{row}")
+        row += 1
+        
+        ws[f"A{row}"] = "Software name"
+        for cell in [ws[f"A{row}"]]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.border = border
+            cell.alignment = center_align
+        row += 1
+        
+        for r in not_found:
+            ws[f"A{row}"] = r["software"]
+            ws[f"A{row}"].border = border
+            ws[f"A{row}"].alignment = left_align
+            row += 1
+    
+    # Set column widths
+    ws.column_dimensions["A"].width = 35
+    ws.column_dimensions["B"].width = 35
+    ws.column_dimensions["C"].width = 20
+    
+    # Save the workbook
+    excel_path = output_path.replace(".csv", ".xlsx")
+    wb.save(excel_path)
+    return excel_path
 
 
 def display_results(results, counts, hostname):
