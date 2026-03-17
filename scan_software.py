@@ -473,23 +473,6 @@ def extract_pdf_table(pdf_path):
     return names
 
 
-PAID_SOFTWARE = [
-    "mobaxterm",
-    "termius",
-    "docker desktop",
-    "irfanview",
-    "anaconda",
-    "teracopy",
-    "sublime",
-    "windsurf",
-    "warp",
-    "burp suite professional",
-    "laragon",
-    "xshell",
-    "sdk arm additions",
-    "sdk arm redistributables",
-    "vs script debugging common",
-]
 
 APPROVED_LIST = [
     "putty",
@@ -792,9 +775,6 @@ def run_check_local(csv_bytes):
 
         # Check if matched software is paid
         remark = ""
-        if status == "Allowed" and matched:
-            if any(p in matched for p in PAID_SOFTWARE):
-                remark = "Paid software. Please contact IT unit."
 
         results.append({
             "software": sw_name,
@@ -905,8 +885,8 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     
     # Header Section
     ws[f"A{row}"] = "Software Compliance Report"
-    ws[f"A{row}"].font = Font(bold=True, size=14)
-    row += 2
+    ws[f"A{row}"].font = Font(bold=True, size=11)
+    row += 1
     
     ws[f"A{row}"] = "Hostname:"
     ws[f"B{row}"] = hostname
@@ -934,7 +914,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         row += 1
         
         ws[f"A{row}"] = "Software name"
-        ws[f"B{row}"] = "Matched With"
+        ws[f"B{row}"] = "Matched With SAM List"
         for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
@@ -956,7 +936,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     # ALLOWED Section
     allowed = [r for r in results if r["status"] == "Allowed"]
     if allowed:
-        ws[f"A{row}"] = f"ALLOWED ({len(allowed)})"
+        ws[f"A{row}"] = f"ALLOWED ({len(allowed)}) - Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my"
         ws[f"A{row}"].font = Font(bold=True)
         ws.merge_cells(f"A{row}:C{row}")
         row += 1
@@ -972,14 +952,10 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         
         for r in allowed:
             remark = r.get("remark", "")
-            if remark:
-                remark_display = f"{remark} (paid software)" if "paid" not in remark.lower() else remark
-            else:
-                remark_display = ""
             
             ws[f"A{row}"] = r["software"]
             ws[f"B{row}"] = r["matched"]
-            ws[f"C{row}"] = remark_display
+            ws[f"C{row}"] = remark
             for cell in [ws[f"A{row}"], ws[f"B{row}"], ws[f"C{row}"]]:
                 cell.border = border
                 cell.alignment = left_align
@@ -1048,10 +1024,7 @@ def display_results(results, counts, hostname):
     if allowed:
         print(f"  === ALLOWED ({len(allowed)}) ===========================================")
         for r in allowed:
-            name = r['software'][:60]
-            if r.get('remark'):
-                name += " (paid software)"
-            print(f"  | {name}")
+            print(f"  | {r['software'][:60]}")
             print(f"  |   Matched: {r['matched'][:55]}")
         print(f"  ================================================================\n")
 
