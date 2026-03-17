@@ -936,8 +936,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         ws[f"A{row}"] = "Software name"
         ws[f"B{row}"] = "Matched With"
         for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
-            cell.fill = header_fill
-            cell.font = header_font
+            cell.font = Font(bold=True, color="000000")
             cell.border = border
             cell.alignment = center_align
         row += 1

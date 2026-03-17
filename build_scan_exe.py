@@ -40,9 +40,9 @@ def main():
     for pdf in [approved_pdf, not_approved_pdf]:
         if os.path.exists(pdf):
             pdfs_found.append(pdf)
-            print(f"  ✓ Found: {os.path.basename(pdf)}")
+            print(f"  [OK] Found: {os.path.basename(pdf)}")
         else:
-            print(f"  ✗ Missing: {os.path.basename(pdf)}")
+            print(f"  [XX] Missing: {os.path.basename(pdf)}")
 
     # --- Step 2: Create clean venv ---
     print()
@@ -53,13 +53,13 @@ def main():
         # Use base Python to create venv (not conda)
         base_python = sys.executable
         run_cmd([base_python, "-m", "venv", VENV_DIR])
-        print(f"  ✓ venv created at: {VENV_DIR}")
+        print(f"  [OK] venv created at: {VENV_DIR}")
 
         # --- Step 3: Install minimal deps ---
         print("  [2/4] Installing minimal dependencies...")
         venv_pip = os.path.join(VENV_DIR, "Scripts", "pip.exe")
         run_cmd([venv_pip, "install", "--no-cache-dir"] + REQUIRED_PACKAGES)
-        print(f"  ✓ Installed: {', '.join(REQUIRED_PACKAGES)}")
+        print(f"  [OK] Installed: {', '.join(REQUIRED_PACKAGES)}")
     else:
         print("  [1/4] Using existing build venv")
         print("  [2/4] Dependencies already installed")
@@ -91,7 +91,7 @@ def main():
 
     result = subprocess.run(build_args, text=True)
     if result.returncode != 0:
-        print("  ✗ Build failed!")
+        print("  [XX] Build failed!")
         sys.exit(1)
 
     # --- Step 5: Report results ---
@@ -99,10 +99,10 @@ def main():
     if os.path.exists(exe_path):
         size_mb = os.path.getsize(exe_path) / (1024 * 1024)
         print(f"\n  [4/4] Build successful!")
-        print(f"  ✓ Output: {exe_path}")
-        print(f"  ✓ Size: {size_mb:.1f} MB")
+        print(f"  [OK] Output: {exe_path}")
+        print(f"  [OK] Size: {size_mb:.1f} MB")
     else:
-        print("  ✗ EXE not found after build!")
+        print("  [XX] EXE not found after build!")
         sys.exit(1)
 
     print("\n" + "=" * 60)
