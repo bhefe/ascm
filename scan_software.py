@@ -833,8 +833,6 @@ def main():
         print(f"  ")
         print(f"  Completed. Report saved to: {output_path}")
         
-
-         
         return output_path
 
     except Exception as e:
@@ -1021,6 +1019,12 @@ def display_results(results, counts, hostname):
 
 
 if __name__ == "__main__":
-    main()
+    output_path = main()
     input("\n  Press Enter to close...")
+    if output_path:
+        try:
+            os.startfile(output_path)
+        except Exception as e:
+            pass
+
 
