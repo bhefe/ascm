@@ -821,7 +821,7 @@ def main():
         scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         print("\n" + "="*80)
-        print(f"  SOFTWARE COMPLIANCE SCAN V1.3")
+        print(f"  SOFTWARE COMPLIANCE SCAN V1.4")
         print("="*80)
         print(f"  Hostname: {hostname}")
         print(f"  Username: {username}")
