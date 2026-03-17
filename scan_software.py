@@ -849,59 +849,25 @@ def main():
         print("  [STEP 2] Comparing against compliance lists...\n")
         results, counts = run_check_local(csv_bytes)
 
-        # Step 4: SAVE compliance report to Downloads
+        # Step 4: SAVE EXCEL REPORT to Downloads
         safe_hostname = hostname.replace(" ", "_")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"compliance_report_{safe_hostname}_{timestamp}.csv"
+        filename = f"compliance_report_{safe_hostname}_{timestamp}.xlsx"
         downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
         os.makedirs(downloads_dir, exist_ok=True)
         output_path = os.path.join(downloads_dir, filename)
 
-        with open(output_path, "w", newline="", encoding="utf-8") as f:
-            f.write(f"Software Compliance Report\n")
-            f.write(f"Hostname: {hostname}\n")
-            f.write(f"Username: {username}\n")
-            f.write(f"Scan Time: {scan_time}\n")
-            f.write(f"Total Checked: {sum(counts.values())}\n")
-            f.write(f"\n")
-
-            w = csv.writer(f)
-
-            allowed = [r for r in results if r["status"] == "Allowed"]
-            not_allowed = [r for r in results if r["status"] == "Not Allowed"]
-            unknown = [r for r in results if r["status"] == "Not Found"]
-
-            f.write(f"NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately or contact IT unit\n")
-            w.writerow(["Software", "Matched With"])
-            for r in not_allowed:
-                w.writerow([r["software"], r["matched"]])
-            f.write(f"\n")
-
-            f.write(f"ALLOWED ({len(allowed)})\n")
-            w.writerow(["Software", "Matched With", "Remark"])
-            for r in allowed:
-                w.writerow([r["software"], r["matched"], r.get("remark", "")])
-            f.write(f"\n")
-
-            f.write(f"UNKNOWN ({len(unknown)})\n")
-            w.writerow(["Software"])
-            for r in unknown:
-                w.writerow([r["software"]])
-
-        print(f"  [OK] Saved to: {output_path}\n")
+        # Generate Excel report
+        generate_excel_report(output_path, results, counts, hostname, username, scan_time)
+        print(f"  [OK] Excel report saved to: {output_path}\n")
         
-        # Step 5: GENERATE EXCEL REPORT
-        excel_path = generate_excel_report(output_path, results, counts, hostname, username, scan_time)
-        print(f"  [OK] Excel report saved to: {excel_path}\n")
-        
-        # Step 6: DISPLAY RESULTS
+        # Step 5: DISPLAY RESULTS
         display_results(results, counts, hostname)
         
         print("\n" + "="*80)
         print("  SCAN COMPLETE")
         print("="*80)
-        print(f"  CSV saved to: {output_path}")
-        print(f"  Excel saved to: {excel_path}")
+        print(f"  Report saved to: {output_path}")
         print("="*80 + "\n")
         
         return output_path
@@ -992,7 +958,6 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     allowed = [r for r in results if r["status"] == "Allowed"]
     if allowed:
         ws[f"A{row}"] = f"ALLOWED ({len(allowed)})"
-        ws[f"A{row}"].fill = allowed_fill
         ws[f"A{row}"].font = Font(bold=True)
         ws.merge_cells(f"A{row}:C{row}")
         row += 1
@@ -1001,7 +966,6 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         ws[f"B{row}"] = "Matched With"
         ws[f"C{row}"] = "Remark"
         for cell in [ws[f"A{row}"], ws[f"B{row}"], ws[f"C{row}"]]:
-            cell.fill = header_fill
             cell.font = header_font
             cell.border = border
             cell.alignment = center_align
@@ -1053,9 +1017,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     ws.column_dimensions["C"].width = 20
     
     # Save the workbook
-    excel_path = output_path.replace(".csv", ".xlsx")
-    wb.save(excel_path)
-    return excel_path
+    wb.save(output_path)
 
 
 def display_results(results, counts, hostname):
