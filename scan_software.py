@@ -716,6 +716,31 @@ def clean_name(name):
     return " ".join(name.split()).strip()
 
 
+def consolidate_software_name(name):
+    """Extract base software name by removing versions, architecture, and components."""
+    if name is None:
+        return ""
+    
+    # Remove version numbers and architecture tags
+    consolidated = re.sub(r"\s*\(32-bit\)|\s*\(64-bit\)|\s*\(x64\)|\s*\(x86\)", "", name, flags=re.IGNORECASE)
+    consolidated = re.sub(r"\s*\d+\.\d+[\.\d]*", "", consolidated)
+    
+    # Remove common component suffixes
+    suffixes = [
+        r"\s*(core interpreter|development libraries|executables|standard library|pip bootstrap|runtime|library)",
+        r"\s*(sdk|extension sdk|headers|headers and sources|extension)",
+        r"\s*(development tools|build tools|setup metadata)",
+        r"\s*\(user\)|\s*\(current user\)",
+    ]
+    
+    for suffix in suffixes:
+        consolidated = re.sub(suffix, "", consolidated, flags=re.IGNORECASE)
+    
+    # Clean up whitespace
+    consolidated = " ".join(consolidated.split()).strip()
+    return consolidated if consolidated else name
+
+
 def run_check_local(csv_bytes):
     csv_rows = []
     for line in csv_bytes.decode("utf-8").splitlines(keepends=True):
@@ -766,6 +791,19 @@ def run_check_local(csv_bytes):
         counts[status] = counts.get(status, 0) + 1
 
     results.sort(key=lambda r: (["Not Allowed", "Not Found", "Allowed"].index(r["status"]), r["software"].lower()))
+    
+    # Consolidate similar software names (e.g., Python variants -> Python)
+    consolidated = {}
+    for r in results:
+        base_name = consolidate_software_name(r["software"])
+        key = (r["status"], base_name.lower())
+        if key not in consolidated:
+            consolidated[key] = {"software": base_name, "status": r["status"], "matched": r["matched"]}
+    
+    # Convert back to list and re-sort
+    results = list(consolidated.values())
+    results.sort(key=lambda r: (["Not Allowed", "Not Found", "Allowed"].index(r["status"]), r["software"].lower()))
+    
     return results, counts
 
 
@@ -886,22 +924,25 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     if not_allowed:
         ws[f"A{row}"] = f"NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately through IRIS helpdesk or contact IT unit"
         ws[f"A{row}"].font = not_allowed_font
-        ws.merge_cells(f"A{row}:B{row}")
+        ws.merge_cells(f"A{row}:C{row}")
         row += 1
         
-        ws[f"A{row}"] = "Software name"
-        for cell in [ws[f"A{row}"]]:
+        ws[f"A{row}"] = "No."
+        ws[f"B{row}"] = "Software name"
+        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
             cell.alignment = center_align
         row += 1
         
-        for r in not_allowed:
-            ws[f"A{row}"] = r["software"]
-            for cell in [ws[f"A{row}"]]:
+        for idx, r in enumerate(not_allowed, 1):
+            ws[f"A{row}"] = idx
+            ws[f"B{row}"] = r["software"]
+            for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
                 cell.font = not_allowed_font
                 cell.border = border
                 cell.alignment = left_align
+            ws[f"A{row}"].alignment = center_align
             row += 1
         
         row += 1
