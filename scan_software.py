@@ -911,21 +911,24 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     if allowed:
         ws[f"A{row}"] = f"ALLOWED ({len(allowed)}) - Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my"
         ws[f"A{row}"].font = Font(bold=True)
-        ws.merge_cells(f"A{row}:B{row}")
+        ws.merge_cells(f"A{row}:C{row}")
         row += 1
         
-        ws[f"A{row}"] = "Software name"
-        for cell in [ws[f"A{row}"]]:
+        ws[f"A{row}"] = "No."
+        ws[f"B{row}"] = "Software name"
+        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
             cell.alignment = center_align
         row += 1
         
-        for r in allowed:
-            ws[f"A{row}"] = r["software"]
-            for cell in [ws[f"A{row}"]]:
+        for idx, r in enumerate(allowed, 1):
+            ws[f"A{row}"] = idx
+            ws[f"B{row}"] = r["software"]
+            for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
                 cell.border = border
                 cell.alignment = left_align
+            ws[f"A{row}"].alignment = center_align
             row += 1
         
         row += 1
@@ -939,22 +942,27 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         ws.merge_cells(f"A{row}:C{row}")
         row += 1
         
-        ws[f"A{row}"] = "Software name"
-        for cell in [ws[f"A{row}"]]:
+        ws[f"A{row}"] = "No."
+        ws[f"B{row}"] = "Software name"
+        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
             cell.fill = header_fill
             cell.font = header_font
             cell.border = border
             cell.alignment = center_align
         row += 1
         
-        for r in not_found:
-            ws[f"A{row}"] = r["software"]
+        for idx, r in enumerate(not_found, 1):
+            ws[f"A{row}"] = idx
+            ws[f"B{row}"] = r["software"]
             ws[f"A{row}"].border = border
-            ws[f"A{row}"].alignment = left_align
+            ws[f"A{row}"].alignment = center_align
+            ws[f"B{row}"].border = border
+            ws[f"B{row}"].alignment = left_align
             row += 1
     
     # Set column widths
-    ws.column_dimensions["A"].width = 50
+    ws.column_dimensions["A"].width = 8
+    ws.column_dimensions["B"].width = 50
     
     # Save the workbook
     wb.save(output_path)
