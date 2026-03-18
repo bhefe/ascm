@@ -8,11 +8,13 @@ import subprocess
 import json
 import re
 import io
+import urllib.parse
 from datetime import datetime
 
 import pdfplumber
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.worksheet.hyperlink import Hyperlink
 
 
 # When running as frozen exe, PDFs are bundled in _MEIPASS temp dir
@@ -955,6 +957,18 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         ws.merge_cells(f"A{row}:C{row}")
         row += 1
         
+        # Add clickable email link for ALLOWED section
+        software_list = "\n".join([r["software"] for r in allowed])
+        body = f"Dear Sam,\n\nSoftware listed below requires clearance memo.\n\n{software_list}"
+        subject = "Software Clearance Memo Request - ALLOWED"
+        mailto_url = f"mailto:sam@tm.com.my?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
+        
+        ws[f"A{row}"] = "Click here to send clearance memo email"
+        ws[f"A{row}"].font = Font(color="0563C1", underline="single")
+        ws[f"A{row}"].hyperlink = Hyperlink(target=mailto_url, display="Click here to send clearance memo email")
+        row += 1
+        row += 1
+        
         ws[f"A{row}"] = "No."
         ws[f"B{row}"] = "Software name"
         for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
@@ -981,6 +995,18 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         ws[f"A{row}"].fill = not_found_fill
         ws[f"A{row}"].font = Font(bold=True)
         ws.merge_cells(f"A{row}:C{row}")
+        row += 1
+        
+        # Add clickable email link for UNKNOWN section
+        software_list = "\n".join([r["software"] for r in not_found])
+        body = f"Dear Sam,\n\nSoftware listed below requires clearance memo.\n\n{software_list}"
+        subject = "Software Clearance Memo Request - UNKNOWN"
+        mailto_url = f"mailto:sam@tm.com.my?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
+        
+        ws[f"A{row}"] = "Click here to send clearance memo email"
+        ws[f"A{row}"].font = Font(color="0563C1", underline="single")
+        ws[f"A{row}"].hyperlink = Hyperlink(target=mailto_url, display="Click here to send clearance memo email")
+        row += 1
         row += 1
         
         ws[f"A{row}"] = "No."
