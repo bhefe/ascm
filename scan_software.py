@@ -886,12 +886,11 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     if not_allowed:
         ws[f"A{row}"] = f"NOT ALLOWED ({len(not_allowed)}) - Please uninstall immediately through IRIS helpdesk or contact IT unit"
         ws[f"A{row}"].font = not_allowed_font
-        ws.merge_cells(f"A{row}:C{row}")
+        ws.merge_cells(f"A{row}:B{row}")
         row += 1
         
         ws[f"A{row}"] = "Software name"
-        ws[f"B{row}"] = "Matched With SAM List"
-        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
+        for cell in [ws[f"A{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
             cell.alignment = center_align
@@ -899,8 +898,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         
         for r in not_allowed:
             ws[f"A{row}"] = r["software"]
-            ws[f"B{row}"] = r["matched"]
-            for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
+            for cell in [ws[f"A{row}"]]:
                 cell.font = not_allowed_font
                 cell.border = border
                 cell.alignment = left_align
@@ -913,12 +911,11 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     if allowed:
         ws[f"A{row}"] = f"ALLOWED ({len(allowed)}) - Software's listed below requires SAM clearance memo. Pls email to: sam@tm.com.my"
         ws[f"A{row}"].font = Font(bold=True)
-        ws.merge_cells(f"A{row}:C{row}")
+        ws.merge_cells(f"A{row}:B{row}")
         row += 1
         
         ws[f"A{row}"] = "Software name"
-        ws[f"B{row}"] = "Matched With SAM List"
-        for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
+        for cell in [ws[f"A{row}"]]:
             cell.font = Font(bold=True, color="000000")
             cell.border = border
             cell.alignment = center_align
@@ -926,8 +923,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         
         for r in allowed:
             ws[f"A{row}"] = r["software"]
-            ws[f"B{row}"] = r["matched"]
-            for cell in [ws[f"A{row}"], ws[f"B{row}"]]:
+            for cell in [ws[f"A{row}"]]:
                 cell.border = border
                 cell.alignment = left_align
             row += 1
@@ -958,9 +954,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
             row += 1
     
     # Set column widths
-    ws.column_dimensions["A"].width = 35
-    ws.column_dimensions["B"].width = 35
-    ws.column_dimensions["C"].width = 20
+    ws.column_dimensions["A"].width = 50
     
     # Save the workbook
     wb.save(output_path)
