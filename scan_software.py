@@ -958,9 +958,9 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         row += 1
         
         # Add clickable email link for ALLOWED section
-        software_list = "\n".join([r["software"] for r in allowed])
-        body = f"Dear Sam,\n\nSoftware listed below requires clearance memo.\n\n{software_list}"
-        subject = "Software Clearance Memo Request - ALLOWED"
+        software_list = "\n".join([f"{idx}. {r['software']}" for idx, r in enumerate(allowed, 1)])
+        body = f"Dear SAM,\n\nSoftware listed below requires clearance memo.\n\n{software_list}"
+        subject = "Software Clearance Memo Request"
         mailto_url = f"mailto:sam@tm.com.my?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
         
         ws[f"A{row}"] = "Click here to send clearance memo email"
@@ -998,9 +998,9 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         row += 1
         
         # Add clickable email link for UNKNOWN section
-        software_list = "\n".join([r["software"] for r in not_found])
-        body = f"Dear Sam,\n\nSoftware listed below requires clearance memo.\n\n{software_list}"
-        subject = "Software Clearance Memo Request - UNKNOWN"
+        software_list = "\n".join([f"{idx}. {r['software']}" for idx, r in enumerate(not_found, 1)])
+        body = f"Dear SAM,\n\nSoftware listed below requires clearance memo.\n\n{software_list}"
+        subject = "Software Clearance Memo Request"
         mailto_url = f"mailto:sam@tm.com.my?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
         
         ws[f"A{row}"] = "Click here to send clearance memo email"
