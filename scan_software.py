@@ -13,7 +13,6 @@ from datetime import datetime
 import pdfplumber
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
 
 
 # When running as frozen exe, PDFs are bundled in _MEIPASS temp dir
@@ -759,14 +758,10 @@ def run_check_local(csv_bytes):
                 status = official_status[idx]
                 break
 
-        # Check if matched software is paid
-        remark = ""
-
         results.append({
             "software": sw_name,
             "status": status,
             "matched": matched,
-            "remark": remark,
         })
         counts[status] = counts.get(status, 0) + 1
 
