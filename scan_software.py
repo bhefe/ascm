@@ -965,7 +965,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         
         ws[f"A{row}"] = "Click here to send clearance memo email"
         ws[f"A{row}"].font = Font(color="0563C1", underline="single")
-        ws[f"A{row}"].hyperlink = Hyperlink(target=mailto_url, display="Click here to send clearance memo email")
+        ws[f"A{row}"].hyperlink = Hyperlink(ref=f"A{row}", target=mailto_url)
         row += 1
         row += 1
         
@@ -1005,7 +1005,7 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
         
         ws[f"A{row}"] = "Click here to send clearance memo email"
         ws[f"A{row}"].font = Font(color="0563C1", underline="single")
-        ws[f"A{row}"].hyperlink = Hyperlink(target=mailto_url, display="Click here to send clearance memo email")
+        ws[f"A{row}"].hyperlink = Hyperlink(ref=f"A{row}", target=mailto_url)
         row += 1
         row += 1
         
