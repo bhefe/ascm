@@ -211,6 +211,13 @@ IGNORE_LIST = [
     "INTEL INTERGRATED SENSOR",
     "Kaspersky",
     "TMBOX",
+    "DefaultPackMSI",
+    "EUC Security Update (2024-10)",
+    "HP Notifications",
+    "HPAudio Control",
+    "HPSystem Information",
+    "Intel Managementand Security Status",
+    "Microsoft Search in Bing",
 ]
 
 
