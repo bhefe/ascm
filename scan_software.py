@@ -506,6 +506,8 @@ APPROVED_LIST = [
     "heidi sql",
     "mongo db compass",
     "mongo db tools",
+    "mongodb compass",
+    "mongodb tools",
     "win scp",
     "vs code",
     "cursor",
