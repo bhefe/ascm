@@ -11,15 +11,16 @@ Set objFSO = CreateObject("Scripting.FileSystemObject")
 ' Get the directory where this script is located
 strScriptDir = objFSO.GetParentFolderName(WScript.ScriptFullName)
 
-' Define paths
-strSourceExe = strScriptDir & "\dist\Scan Software.exe"
+' Define paths - look for exe in SAME DIRECTORY as this script (not a dist subfolder)
+strSourceExe = strScriptDir & "\Scan Software.exe"
 strTempDir = objShell.ExpandEnvironmentStrings("%TEMP%")
 strTargetExe = strTempDir & "\Scan Software.exe"
 
 ' Check if source exe exists
 If Not objFSO.FileExists(strSourceExe) Then
-    MsgBox "Error: Could not find Scan Software.exe" & vbCrLf & _
-        "Expected location: " & strSourceExe, _
+    MsgBox "Error: Could not find Scan Software.exe" & vbCrLf & vbCrLf & _
+        "Expected location: " & strSourceExe & vbCrLf & vbCrLf & _
+        "Make sure 'Scan Software.exe' is in the same folder as this script.", _
         vbCritical, "Launch Failed"
     WScript.Quit 1
 End If

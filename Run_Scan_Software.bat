@@ -5,7 +5,7 @@ REM This script copies and runs from user temp folder (no admin rights needed)
 setlocal enabledelayedexpansion
 
 REM Define paths
-set SOURCE_EXE="%~dp0dist\Scan Software.exe"
+set SOURCE_EXE="%~dp0Scan Software.exe"
 set TEMP_DIR=%TEMP%
 set TARGET_EXE=!TEMP_DIR!\Scan Software.exe
 
