@@ -1,0 +1,57 @@
+QUICK REFERENCE - HOW TO UNBLOCK
+================================
+
+TL;DR (Too Long; Didn't Read):
+
+1. Right-click "Scan Software.exe"
+2. Click "Properties"
+3. Check "Unblock" (bottom of window)
+4. Click "Apply" → "OK"
+5. Double-click to run
+
+That's it! The software will now work normally.
+
+---
+
+WHY IS THIS NEEDED?
+
+Windows blocks downloaded applications for security.
+Checking "Unblock" tells Windows: "I trust this file"
+
+After unblocking once, you can run it anytime without warnings.
+
+---
+
+WHAT TO EXPECT:
+
+✓ Software scans your laptop (takes 10-30 seconds)
+✓ Shows results in the terminal
+✓ Automatically opens Excel report in your Downloads folder
+✓ Email link in report to request clearance
+
+---
+
+REPORT SECTIONS:
+
+Red (NOT ALLOWED)
+  → Must uninstall immediately
+  → Contact IT if you have questions
+
+Yellow (UNKNOWN)
+  → Click email link to request approval
+  → Send to SAM: sam@tm.com.my
+
+Green (ALLOWED)
+  → OK to use
+  → These are approved by SAM
+
+---
+
+HAVING TROUBLE?
+
+If unblocking doesn't work:
+- Ask your IT department
+- They can whitelist the application
+- You may need to run it once with admin approval
+
+---

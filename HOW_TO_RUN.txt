@@ -1,0 +1,37 @@
+================================================================================
+                    SCAN SOFTWARE - HOW TO RUN
+================================================================================
+
+OPTION A: UNBLOCK METHOD (Easiest)
+================================================================================
+
+1. Right-click "Scan Software.exe"
+
+2. Click "Properties"
+
+3. Check "Unblock" at the bottom
+
+4. Click "Apply" → "OK"
+
+5. Double-click "Scan Software.exe" to run
+
+
+OPTION B: MOVE TO TRUSTED LOCATION (If Option A doesn't work)
+================================================================================
+
+1. Copy "Scan Software.exe" to one of these trusted folders:
+   
+   - C:\Users\[YourUsername]\AppData\Local\
+   OR
+   - C:\Program Files\
+
+2. Navigate to that folder and double-click "Scan Software.exe"
+
+3. The exe will run with higher trust level (less security blocking)
+
+Note: Replace [YourUsername] with your actual Windows username
+
+
+EITHER OPTION WORKS - Choose whichever you prefer!
+
+================================================================================

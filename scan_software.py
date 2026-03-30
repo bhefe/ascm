@@ -207,6 +207,10 @@ IGNORE_LIST = [
     "SAP",
     "AMD Radeon",
     "Lexmark",
+    "EUC SECURITY",
+    "INTEL INTERGRATED SENSOR",
+    "Kaspersky",
+    "TMBOX",
 ]
 
 
@@ -822,7 +826,7 @@ def main():
         scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         print("\n" + "-"*40)
-        print(f"  SOFTWARE COMPLIANCE SCAN V1.4")
+        print(f"  SOFTWARE COMPLIANCE SCAN V1.5")
         print(f"  Hostname: {hostname}")
         print(f"  Username: {username}")
         print(f"  Time: {scan_time}")
