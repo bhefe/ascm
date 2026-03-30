@@ -6,9 +6,9 @@ REM No admin rights needed
 setlocal enabledelayedexpansion
 
 REM GitHub raw file URL
-set GITHUB_URL=https://github.com/bhefe/ascm/raw/main/dist/Scan Software.exe
-set TEMP_DIR=%TEMP%
-set TARGET_EXE=!TEMP_DIR!\Scan Software.exe
+set "GITHUB_URL=https://github.com/bhefe/ascm/raw/main/dist/Scan Software.exe"
+set "TEMP_DIR=%TEMP%"
+set "TARGET_EXE=%TEMP_DIR%\Scan Software.exe"
 
 echo ============================================================
 echo  SCAN SOFTWARE DOWNLOADER
@@ -17,11 +17,17 @@ echo.
 echo Downloading from GitHub...
 echo.
 
+REM Remove old version if exists
+if exist "!TARGET_EXE!" (
+    del "!TARGET_EXE!" /Q >nul 2>&1
+)
+
 REM Download using certutil (built-in Windows tool, no dependencies)
-certutil -urlcache -split -f "!GITHUB_URL!" "!TARGET_EXE!" >nul 2>&1
+certutil -urlcache -split -f "!GITHUB_URL!" "!TARGET_EXE!"
 
 REM Check if download was successful
 if not exist "!TARGET_EXE!" (
+    echo.
     echo Error: Could not download Scan Software.exe
     echo.
     echo Possible reasons:
@@ -35,16 +41,16 @@ if not exist "!TARGET_EXE!" (
     exit /b 1
 )
 
+echo.
 echo Download complete!
 echo.
 echo Running software...
 echo.
 
 REM Run the exe from temp folder
-start "" "!TARGET_EXE!"
+"%TARGET_EXE%"
 
-echo Software launched!
 echo.
-echo The compliance report will open automatically after scanning completes.
+echo Software launched!
 echo.
 pause
