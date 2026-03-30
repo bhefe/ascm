@@ -2,21 +2,38 @@
                     SCAN SOFTWARE - HOW TO RUN
 ================================================================================
 
-OPTION A: UNBLOCK METHOD (Easiest)
+OPTION A: USE INSTALLER (Recommended - Highest compatibility)
+================================================================================
+
+1. Right-click "Install_Scan_Software.vbs"
+
+2. Select "Run as administrator"
+
+3. Click "Yes" to allow the script to run
+
+4. Follow the installation wizard
+
+5. Once installed, find "Scan Software" in your Start Menu and click to run
+
+Note: This method installs the software to a trusted system folder,
+which bypasses many security policies.
+
+
+OPTION B: UNBLOCK METHOD (If Installer doesn't work)
 ================================================================================
 
 1. Right-click "Scan Software.exe"
 
 2. Click "Properties"
 
-3. Check "Unblock" at the bottom
+3. Check "Unblock" at the bottom (if available)
 
 4. Click "Apply" → "OK"
 
 5. Double-click "Scan Software.exe" to run
 
 
-OPTION B: MOVE TO TRUSTED LOCATION (If Option A doesn't work)
+OPTION C: MOVE TO TRUSTED LOCATION (If other options don't work)
 ================================================================================
 
 1. Copy "Scan Software.exe" to one of these trusted folders:
@@ -32,6 +49,6 @@ OPTION B: MOVE TO TRUSTED LOCATION (If Option A doesn't work)
 Note: Replace [YourUsername] with your actual Windows username
 
 
-EITHER OPTION WORKS - Choose whichever you prefer!
+TRY THE OPTIONS IN THIS ORDER - Choose whichever works for your system!
 
 ================================================================================
