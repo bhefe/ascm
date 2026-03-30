@@ -218,6 +218,9 @@ IGNORE_LIST = [
     "HPSystem Information",
     "Intel Managementand Security Status",
     "Microsoft Search in Bing",
+    "adobe acrobat",
+    "microsoft project - en-us",
+    "microsoft visio - en-us",
 ]
 
 
