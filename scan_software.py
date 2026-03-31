@@ -221,11 +221,16 @@ IGNORE_LIST = [
     "adobe acrobat",
     "microsoft project - en-us",
     "microsoft visio - en-us",
+    "Java(TM) SE Development Kit 20",
 ]
 
 
 def get_installed_software():
+    """Scan Windows registry for installed software. Gracefully handles permission errors."""
     software_list = []
+    success = True
+    error_msg = None
+    
     reg_paths = [
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
@@ -235,49 +240,55 @@ def get_installed_software():
     for hive, path in reg_paths:
         try:
             key = winreg.OpenKey(hive, path)
-        except OSError:
+        except PermissionError:
+            if success:  # Only set error on first occurrence
+                success = False
+                error_msg = "registry access denied (admin rights required)"
+            continue
+        except OSError as e:
             continue
 
-        for i in range(winreg.QueryInfoKey(key)[0]):
-            try:
-                subkey_name = winreg.EnumKey(key, i)
-                subkey = winreg.OpenKey(key, subkey_name)
-
+        try:
+            for i in range(winreg.QueryInfoKey(key)[0]):
                 try:
-                    name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                    subkey_name = winreg.EnumKey(key, i)
+                    subkey = winreg.OpenKey(key, subkey_name)
+
+                    try:
+                        name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                    except OSError:
+                        name = None
+
+                    try:
+                        version = winreg.QueryValueEx(subkey, "DisplayVersion")[0]
+                    except OSError:
+                        version = ""
+
+                    try:
+                        publisher = winreg.QueryValueEx(subkey, "Publisher")[0]
+                    except OSError:
+                        publisher = ""
+
+                    try:
+                        install_date = winreg.QueryValueEx(subkey, "InstallDate")[0]
+                    except OSError:
+                        install_date = ""
+
+                    if name and not _should_exclude(name, version, publisher):
+                        software_list.append({
+                            "Software": name.strip(),
+                            "Version": str(version).strip(),
+                            "Publisher": str(publisher).strip(),
+                            "InstallDate": str(install_date).strip(),
+                        })
+
+                    subkey.Close()
                 except OSError:
-                    name = None
+                    continue
+        finally:
+            key.Close()
 
-                try:
-                    version = winreg.QueryValueEx(subkey, "DisplayVersion")[0]
-                except OSError:
-                    version = ""
-
-                try:
-                    publisher = winreg.QueryValueEx(subkey, "Publisher")[0]
-                except OSError:
-                    publisher = ""
-
-                try:
-                    install_date = winreg.QueryValueEx(subkey, "InstallDate")[0]
-                except OSError:
-                    install_date = ""
-
-                if name and not _should_exclude(name, version, publisher):
-                    software_list.append({
-                        "Software": name.strip(),
-                        "Version": str(version).strip(),
-                        "Publisher": str(publisher).strip(),
-                        "InstallDate": str(install_date).strip(),
-                    })
-
-                subkey.Close()
-            except OSError:
-                continue
-
-        key.Close()
-
-    return software_list
+    return software_list, success, error_msg
 
 
 def _should_exclude(name: str, version: str, publisher: str) -> bool:
@@ -438,10 +449,17 @@ def get_store_apps():
                 "InstallDate": "",
             })
 
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError):
-        pass
+    except subprocess.TimeoutExpired:
+        return software_list, False, "store apps scan timed out"
+    except json.JSONDecodeError:
+        return software_list, False, "store apps scan returned invalid data"
+    except FileNotFoundError:
+        return software_list, False, "powershell not found"
+    except Exception as e:
+        error_msg = str(e) if str(e) else "unknown error during store apps scan"
+        return software_list, False, error_msg
 
-    return software_list
+    return software_list, True, None
 
 
 def deduplicate_and_sort(software_list):
@@ -838,7 +856,7 @@ def main():
         scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         print("\n" + "-"*40)
-        print(f"  SOFTWARE COMPLIANCE SCAN V1.5")
+        print(f"  SOFTWARE COMPLIANCE SCAN V1.6")
         print(f"  Hostname: {hostname}")
         print(f"  Username: {username}")
         print(f"  Time: {scan_time}")
@@ -846,10 +864,25 @@ def main():
 
         # Step 1: SCAN
         print("  1. Scanning installed software...\n")
-        registry_apps = get_installed_software()
-        store_apps = get_store_apps()
+        registry_apps, reg_success, reg_error = get_installed_software()
+        store_apps, store_success, store_error = get_store_apps()
+        
+        # Track data source status
+        data_source_warnings = []
+        if not reg_success:
+            data_source_warnings.append(f"    ⚠ Registry scan failed: {reg_error}")
+        if not store_success:
+            data_source_warnings.append(f"    ⚠ Store apps scan failed: {store_error}")
+        
         software = deduplicate_and_sort(registry_apps + store_apps)
-        print(f"  Found installed programs.\n")
+        
+        if data_source_warnings:
+            print("  ⚠ Data Source Warnings:")
+            for warning in data_source_warnings:
+                print(warning)
+            print()
+        
+        print(f"  Found {len(software)} installed programs.\n")
 
         # Step 2: Create CSV in memory for compliance check
         csv_output = io.StringIO()
@@ -874,10 +907,10 @@ def main():
         output_path = os.path.join(downloads_dir, filename)
 
         # Generate Excel report
-        generate_excel_report(output_path, results, counts, hostname, username, scan_time)
+        generate_excel_report(output_path, results, counts, hostname, username, scan_time, data_source_warnings)
         
         # Step 5: DISPLAY RESULTS
-        display_results(results, counts, hostname)
+        display_results(results, counts, hostname, data_source_warnings)
         
 
 
@@ -893,8 +926,11 @@ def main():
         return None
 
 
-def generate_excel_report(output_path, results, counts, hostname, username, scan_time):
+def generate_excel_report(output_path, results, counts, hostname, username, scan_time, data_source_warnings=None):
     """Generate an Excel report with color coding and formatting."""
+    if data_source_warnings is None:
+        data_source_warnings = []
+    
     wb = Workbook()
     ws = wb.active
     ws.title = "Compliance Report"
@@ -936,6 +972,25 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     ws[f"A{row}"] = "Total Checked:"
     ws[f"B{row}"] = sum(counts.values())
     row += 2
+    
+    # Display data source warnings if any
+    if data_source_warnings:
+        warning_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")  # Light red
+        warning_font = Font(color="9C0006", bold=True)  # Dark red
+        ws[f"A{row}"] = "⚠ Data Source Warnings:"
+        ws[f"A{row}"].font = warning_font
+        ws[f"A{row}"].fill = warning_fill
+        ws.merge_cells(f"A{row}:C{row}")
+        row += 1
+        
+        for warning in data_source_warnings:
+            clean_warning = warning.replace("⚠ ", "").replace("    ", "")
+            ws[f"A{row}"] = clean_warning
+            ws[f"A{row}"].font = Font(color="9C0006")
+            ws[f"A{row}"].fill = warning_fill
+            ws.merge_cells(f"A{row}:C{row}")
+            row += 1
+        row += 1
     
     # NOT ALLOWED Section
     not_allowed = [r for r in results if r["status"] == "Not Allowed"]
@@ -1051,8 +1106,10 @@ def generate_excel_report(output_path, results, counts, hostname, username, scan
     wb.save(output_path)
 
 
-def display_results(results, counts, hostname):
+def display_results(results, counts, hostname, data_source_warnings=None):
     """Display compliance results in a formatted table."""
+    if data_source_warnings is None:
+        data_source_warnings = []
     
     # Group results by status
     allowed = [r for r in results if r["status"] == "Allowed"]
@@ -1066,6 +1123,13 @@ def display_results(results, counts, hostname):
     print(f"  | Not Allowed:  {counts['Not Allowed']:>4} programs            |")
     print(f"  | Not Found:    {counts.get('Not Found', 0):>4} programs            |")
     print(f"  +---------------------------------------------+\n")
+    
+    # Print data source warnings if any
+    if data_source_warnings:
+        print(f"  ⚠ Data Source Warnings:")
+        for warning in data_source_warnings:
+            print(warning)
+        print()
 
     # Print detailed results if there are issues
     if not_allowed:
