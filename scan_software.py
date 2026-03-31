@@ -222,6 +222,36 @@ IGNORE_LIST = [
     "microsoft project - en-us",
     "microsoft visio - en-us",
     "Java(TM) SE Development Kit 20",
+    "04LTS",
+    "Codex",
+    "Compute Sanitizer",
+    "CRT Development",
+    "ctadvisor",
+    "CUBLAS Development",
+    "CUDA CCCL",
+    "CUDA Documentation",
+    "CUDA Profiler API",
+    "CUDART TileIR",
+    "CUFFT Development",
+    "cuobjdump",
+    "CUPTI",
+    "CURAND Development",
+    "CUSOLVER Development",
+    "CUSPARSE Development",
+    "cuxxfilt",
+    "Disassembler",
+    "JabRef",
+    "libnvptxcompiler Development",
+    "MuseHub",
+    "NIS IE Fix",
+    "NPP Development",
+    "nvcc",
+    "NVJPEG Development",
+    "nvprune",
+    "NVRTC Development",
+    "NVTX Development",
+    "NVVM Development",
+    "Occupancy Calculator",
 ]
 
 
@@ -882,7 +912,7 @@ def main():
                 print(warning)
             print()
         
-        print(f"  Found {len(software)} installed programs.\n")
+        print(f"  Found installed programs.\n")
 
         # Step 2: Create CSV in memory for compliance check
         csv_output = io.StringIO()
@@ -1117,12 +1147,12 @@ def display_results(results, counts, hostname, data_source_warnings=None):
     not_found = [r for r in results if r["status"] == "Not Found"]
 
     # Print summary
-    print(f"  ")
-    print(f"  +-- COMPLIANCE SUMMARY -----------------------+")
-    print(f"  | Allowed:      {counts['Allowed']:>4} programs            |")
-    print(f"  | Not Allowed:  {counts['Not Allowed']:>4} programs            |")
-    print(f"  | Not Found:    {counts.get('Not Found', 0):>4} programs            |")
-    print(f"  +---------------------------------------------+\n")
+    # print(f"  ")
+    # print(f"  +-- COMPLIANCE SUMMARY -----------------------+")
+    # print(f"  | Allowed:      {counts['Allowed']:>4} programs            |")
+    # print(f"  | Not Allowed:  {counts['Not Allowed']:>4} programs            |")
+    # print(f"  | Not Found:    {counts.get('Not Found', 0):>4} programs            |")
+    # print(f"  +---------------------------------------------+\n")
     
     # Print data source warnings if any
     if data_source_warnings:
@@ -1133,7 +1163,7 @@ def display_results(results, counts, hostname, data_source_warnings=None):
 
     # Print detailed results if there are issues
     if not_allowed:
-        print(f"  ")
+        # print(f"  ")
         print(f"\033[1;31m  -------------------------------------------------------------------------------------\033[0m")
         print(f"\033[1;31m  NOT ALLOWED ({len(not_allowed)}) Please uninstall immediately through IRIS helpdesk or contact IT unit\033[0m")
         print(f"\033[1;31m  -------------------------------------------------------------------------------------\033[0m")
@@ -1164,7 +1194,7 @@ def display_results(results, counts, hostname, data_source_warnings=None):
 
 if __name__ == "__main__":
     output_path = main()
-    input("\n  Press Enter to close...")
+    input("\n  Press Enter to close.")
     if output_path:
         try:
             os.startfile(output_path)
